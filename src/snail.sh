@@ -12,11 +12,25 @@ SNAIL_LD_LINUX_32=""
 SNAIL_LD_LINUX_64=""
 
 function snail_find_app_deps() {
-#    for lib in $(LD_TRACE_LOADED_OBJECTS=1 $1 | grep ".*/" | sed s/.*=\>// | sed s/\(.*//)
-#    do
-#
-#    done
     printf "\t\t@@@ - Inspecting %s's dependencies...\n" $1
+    for libpath in $(LD_TRACE_LOADED_OBJECTS=1 $1 | grep ".*/" | sed s/.*=\>// | sed s/\(.*//)
+    do
+	filename=$(echo ${libpath} | sed s/.*\\///)
+	file_exists=$(ls -1 ${SNAIL_TEMP_DIR}/${filename} 2>/dev/null | wc -l)
+	if [ ${file_exists} -eq 0 ] ; then
+	    printf "\t\t\t@@@ - copying: %s... " ${filename}
+    	    cp ${libpath} ${SNAIL_TEMP_DIR}/ &>/dev/null 
+    	    if [ $? -eq 0 ] ; then
+    		printf "copied.\n"
+    	    else
+    		printf "copy error... aborting.\n"
+    		fini_snail
+    		exit 1
+    	    fi
+    	else
+    	    printf "\t\t\t@@@ - already copied: %s.\n" ${filename}
+	fi
+    done
     printf "\t\t@@@ - done.\n"
 }
 
@@ -46,7 +60,7 @@ function find_ld_linux32() {
 }
 
 function find_ld_linux64() {
-    SNAIL_LD_LINUX_64=$(find / -name "ld-linux-x86_64.so.2" -executable | tail -1)
+    SNAIL_LD_LINUX_64=$(find / -name "ld-linux-x86-64.so.2" -executable | tail -1)
 }
 
 function get_platform_arch() {
@@ -95,4 +109,4 @@ function snail() {
     printf "@@@ - done.\n"
 }
 
-snail "." "temp.zip"
+snail "/bin" "temp.zip"
