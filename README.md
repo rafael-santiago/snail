@@ -24,5 +24,5 @@ your package has. Producing at the end a ``zip`` file which gathers these depend
 
 Now, all you need to do is ``unzip`` these dependencies inside the directory ``X`` on **target machine**.
 
-That's all folks, now you may say *"home sweet home"*.
+That's all folks, now you may say *"home sweet home"* there.
 
