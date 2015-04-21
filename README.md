@@ -17,12 +17,11 @@ A good choice is let ``-rpath`` and ``INTERP`` path as the same.
 After in your **build environment**, place all binaries which compose your binary package in some specific place ``X``, and
 run ``snail.sh`` in this way:
 
->``./snail.sh --directory=X --output=MyDependencies.zip``
+>``./snail.sh --directory X --output MyDependencies.zip``
 
 At this point, ``snail.sh`` will scan the current environment in order to find and collect all dependency that
 your package has. Producing at the end a ``zip`` file which gathers these dependencies.
 
-Now, all you need to do is ``unzip`` these dependencies inside the directory ``X`` on **target machine**.
+Now, all you need to do is ``unzip`` these dependencies inside the directory that the ``-rpath`` and ``INTERP`` configuration from your binaries expects on **target machine**.
 
 That's all folks, now you may say *"home sweet home"* there.
-
