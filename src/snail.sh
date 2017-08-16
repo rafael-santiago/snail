@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/local/bin/bash
 #
 #                              Copyright (C) 2015 by Rafael Santiago
 #
@@ -13,9 +13,9 @@
 
 SNAIL_TEMP_DIR=".snail"
 
-SNAIL_LD_LINUX_32=""
+SNAIL_LD_32=""
 
-SNAIL_LD_LINUX_64=""
+SNAIL_LD_64=""
 
 SHOULD_REMOVE_INTERP=0
 
@@ -45,9 +45,9 @@ function snail_find_app_deps() {
 }
 
 function snail_find_so_deps() {
-    ld_so=${SNAIL_LD_LINUX_32}
+    ld_so=${SNAIL_LD_32}
     if [ $(get_platform_arch) -eq 64 ] ; then
-        ld_so=${SNAIL_LD_LINUX_64}
+        ld_so=${SNAIL_LD_64}
     fi
     printf "\t\t@@@ - Inspecting %s's dependencies...\n" $1
     for libpath in $(LD_TRACE_LOADED_OBJECTS=1 ${ld_so} ./$1 | grep ".*/" | sed s/.*=\>// | sed s/\(.*//)
@@ -100,11 +100,11 @@ function get_elf_arch() {
 }
 
 function find_ld_linux32() {
-    SNAIL_LD_LINUX_32=$(find / -name "ld-linux.so.2" -executable | tail -1)
+    SNAIL_LD_32=$(find / -name "ld-linux.so.2" -executable | tail -1)
 }
 
 function find_ld_linux64() {
-    SNAIL_LD_LINUX_64=$(find / -name "ld-linux-x86-64.so.2" -executable | tail -1)
+    SNAIL_LD_64=$(find / -name "ld-linux-x86-64.so.2" -executable | tail -1)
 }
 
 function get_platform_arch() {
@@ -144,9 +144,9 @@ function setup_interp() {
             SHOULD_REMOVE_INTERP=1
             mkdir -p ${INTERP_PATH}
             if [ $(get_platform_arch) -eq 32 ] ; then
-                cp ${SNAIL_LD_LINUX_32} ${filepath} &>/dev/null
+                cp ${SNAIL_LD_32} ${filepath} &>/dev/null
             else
-                cp ${SNAIL_LD_LINUX_64} ${filepath} &>/dev/null
+                cp ${SNAIL_LD_64} ${filepath} &>/dev/null
             fi
         fi
     fi
@@ -160,7 +160,7 @@ function fini_snail() {
 }
 
 function zip_deps() {
-    printf "@@@ - Zipping all collected dependency into %s... " $1
+    printf "@@@ - Zipping all collected dependencies into %s... " $1
     rm $1 &>/dev/null
     zip -j $1 ${SNAIL_TEMP_DIR}/* &>/dev/null
     if [ $? -eq 0 ] ; then
