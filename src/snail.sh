@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/bin/bash
 #
 #                              Copyright (C) 2015 by Rafael Santiago
 #
