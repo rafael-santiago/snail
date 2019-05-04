@@ -25,7 +25,7 @@ function snail_find_app_deps() {
     printf "\t\t@@@ - Inspecting %s's dependencies...\n" $1
     for libpath in $(LD_TRACE_LOADED_OBJECTS=1 $1 | grep ".*/" | sed s/.*=\>// | sed s/\(.*//)
     do
-	filename=$(echo ${libpath} | sed s/.*\\///)
+	filename=$(basename ${libpath})
 	file_exists=$(ls -1 ${SNAIL_TEMP_DIR}/${filename} 2>/dev/null | wc -l)
 	if [ ${file_exists} -eq 0 ] ; then
 	    printf "\t\t\t@@@ - copying: %s... " ${filename}
@@ -52,7 +52,7 @@ function snail_find_so_deps() {
     printf "\t\t@@@ - Inspecting %s's dependencies...\n" $1
     for libpath in $(LD_TRACE_LOADED_OBJECTS=1 ${ld_so} ./$1 | grep ".*/" | sed s/.*=\>// | sed s/\(.*//)
     do
-        filename=$(echo ${libpath} | sed s/.*\\///)
+        filename=$(basename ${libpath})
         file_exists=$(ls -1 ${SNAIL_TEMP_DIR}/${filename} 2>/dev/null | wc -l)
         if [ ${file_exists} -eq 0 ] ; then
             printf "\t\t\t@@@ - copying: %s... " ${filename}
@@ -69,7 +69,7 @@ function snail_find_so_deps() {
         fi
     done
     printf "\t\t@@@ - done.\n"
-    filename=$(echo ${ld_so} | sed s/.*\\///)
+    filename=$(basename ${ld_so})
     file_exists=$(ls -1 ${SNAIL_TEMP_DIR}/${filename} 2>/dev/null | wc -l)
     if [ ${file_exists} -eq 0 ] ; then
         printf "\t\t@@@ - copying: %s... " ${filename}
@@ -136,8 +136,8 @@ function setup_interp() {
         fi
     done
     if [ ! -z ${interp_path} ] ; then
-        filename=$(echo ${interp_path} | sed s/.*\\///)
-        INTERP_PATH=$(echo ${interp_path} | sed s/${filename}//)
+        filename=$(basename ${interp_path})
+        INTERP_PATH=$(dirname ${interp_path})
         if [ -f ${interp_path} ] ; then
             SHOULD_REMOVE_INTERP=0
         else
