@@ -22,6 +22,7 @@ SHOULD_REMOVE_INTERP=0
 INTERP_PATH=""
 
 function snail_find_app_deps() {
+    temp_interp=$(setup_interp $1)
     printf "\t\t@@@ - Inspecting %s's dependencies...\n" $1
     for libpath in $(LD_TRACE_LOADED_OBJECTS=1 $1 | grep ".*/" | sed s/.*=\>// | sed s/\(.*//)
     do
@@ -41,10 +42,14 @@ function snail_find_app_deps() {
     	    printf "\t\t\t@@@ - already copied: %s.\n" ${filename}
 	fi
     done
+    if [ ! -z "$temp_interp" ] ; then
+        remove_interp $temp_interp
+    fi
     printf "\t\t@@@ - done.\n"
 }
 
 function snail_find_so_deps() {
+    temp_interp=$(setup_interp $1)
     ld_so=${SNAIL_LD_32}
     if [ $(get_platform_arch) -eq 64 ] ; then
         ld_so=${SNAIL_LD_64}
@@ -80,6 +85,9 @@ function snail_find_so_deps() {
             fini_snail
             exit 1
         fi
+    fi
+    if [ ! -z "$temp_interp" ] ; then
+        remove_interp $temp_interp
     fi
 }
 
@@ -122,41 +130,40 @@ function init_snail() {
     if [ $(get_platform_arch) -eq 64 ] ; then
         find_ld_linux64
     fi
-    setup_interp $1
 }
 
 function setup_interp() {
-    interp_path=""
-    for filename in $(ls -1 $1)
-    do
-        if [ $(file $1/${filename} | grep ".*: ELF" | wc -l) -eq 1 ] ; then
-            if [ $(is_a_so $1/${filename}) -ne 1 ] ; then
-                interp_path=$(readelf -l $1/${filename} | grep "\\[.*:.*\\]" | sed s/.*\\[// | sed s/.*:// | sed s/\\].*//)
-            fi
+    interpreter=""
+    filename=$1
+    if [ $(file ${filename} | grep ".*: ELF" | wc -l) -eq 1 ] ; then
+        if [ $(is_a_so ${filename}) -ne 1 ] ; then
+            interpreter=$(readelf -l ${filename} | grep "\\[.*:.*\\]" | sed s/.*\\[// | sed s/.*:// | sed s/\\].*//)
         fi
-    done
-    if [ ! -z ${interp_path} ] ; then
-        filename=$(basename ${interp_path})
-        INTERP_PATH=$(dirname ${interp_path})
-        if [ -f ${interp_path} ] ; then
-            SHOULD_REMOVE_INTERP=0
-        else
-            SHOULD_REMOVE_INTERP=1
-            mkdir -p ${INTERP_PATH}
+    fi
+
+    if [ ! -z ${interpreter} ] ; then
+        if [ ! -f ${interpreter} ] ; then
+            mkdir -p $(dirname ${interpreter})
             if [ $(get_platform_arch) -eq 32 ] ; then
-                cp ${SNAIL_LD_32} ${filepath} &>/dev/null
+                cp ${SNAIL_LD_32} ${interpreter} &>/dev/null
             else
-                cp ${SNAIL_LD_64} ${filepath} &>/dev/null
+                cp ${SNAIL_LD_64} ${interpreter} &>/dev/null
             fi
+            echo ${interpreter}
         fi
+    fi
+}
+
+function remove_interp() {
+    if [ -f $1 ]; then
+        printf "\t\t\t@@@ - removing temporary interpreter $1\n"
+        rm $1 &>/dev/null
+        rmdir $(dirname $1) &>/dev/null
     fi
 }
 
 function fini_snail() {
     rm -rf ${SNAIL_TEMP_DIR}
-    if [ ${SHOULD_REMOVE_INTERP} -eq 1 ] ; then
-        rm -rf ${INTERP_PATH} &>/dev/null
-    fi
 }
 
 function zip_deps() {
@@ -181,15 +188,15 @@ function snail() {
     init_snail $1
     printf "@@@ - done.\n\n"
     printf "@@@ - Now, looking for ELFs in directory %s...\n" $1
-    for filename in $(ls -1 $1)
+    for filename in $(find $1 -executable -type f -print)
     do
-        if [ $(file $1/${filename} | grep ".*: ELF" | wc -l) -eq 1 ] ; then
-            if [ $(is_a_so $1/${filename}) -eq 1 ] ; then
-                printf "\t@@@ - Shared object: %s\n" $1/${filename}
-                snail_find_so_deps $1/${filename}
+        if [ $(file ${filename} | grep ".*: ELF" | wc -l) -eq 1 ] ; then
+            if [ $(is_a_so ${filename}) -eq 1 ] ; then
+                printf "\t@@@ - Shared object: %s\n" ${filename}
+                snail_find_so_deps ${filename}
             else
-                printf "\t@@@ - Executable found: %s\n" $1/${filename}
-                snail_find_app_deps $1/${filename}
+                printf "\t@@@ - Executable found: %s\n" ${filename}
+                snail_find_app_deps ${filename}
             fi
         fi
     done
