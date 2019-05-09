@@ -109,11 +109,11 @@ function get_elf_arch() {
 
 LIB_SEARCH_LOCATIONS="/lib /lib32 /lib64"
 function find_ld_linux32() {
-    SNAIL_LD_32=$(find ${LIB_SEARCH_LOCATIONS} -name "ld-linux.so.2" -executable | tail -1)
+    SNAIL_LD_32=$(find ${LIB_SEARCH_LOCATIONS} -name "ld-linux.so.2" -executable 2>/dev/null | tail -1)
 }
 
 function find_ld_linux64() {
-    SNAIL_LD_64=$(find ${LIB_SEARCH_LOCATIONS} -name "ld-linux-x86-64.so.2" -executable | tail -1)
+    SNAIL_LD_64=$(find ${LIB_SEARCH_LOCATIONS} -name "ld-linux-x86-64.so.2" -executable 2>/dev/null | tail -1)
 }
 
 function get_platform_arch() {
