@@ -26,21 +26,21 @@ function snail_find_app_deps() {
     printf "\t\t@@@ - Inspecting %s's dependencies...\n" $1
     for libpath in $(LD_TRACE_LOADED_OBJECTS=1 $1 | grep ".*/" | sed s/.*=\>// | sed s/\(.*//)
     do
-	filename=$(basename ${libpath})
-	file_exists=$(ls -1 ${SNAIL_TEMP_DIR}/${filename} 2>/dev/null | wc -l)
-	if [ ${file_exists} -eq 0 ] ; then
-	    printf "\t\t\t@@@ - copying: %s... " ${filename}
-    	    cp ${libpath} ${SNAIL_TEMP_DIR}/ &>/dev/null
-    	    if [ $? -eq 0 ] ; then
-    		printf "copied.\n"
-    	    else
-    		printf "copy error... aborting.\n"
-    		fini_snail
-    		exit 1
-    	    fi
-    	else
-    	    printf "\t\t\t@@@ - already copied: %s.\n" ${filename}
-	fi
+    filename=$(basename ${libpath})
+    file_exists=$(ls -1 ${SNAIL_TEMP_DIR}/${filename} 2>/dev/null | wc -l)
+    if [ ${file_exists} -eq 0 ] ; then
+        printf "\t\t\t@@@ - copying: %s... " ${filename}
+            cp ${libpath} ${SNAIL_TEMP_DIR}/ &>/dev/null
+            if [ $? -eq 0 ] ; then
+            printf "copied.\n"
+            else
+            printf "copy error... aborting.\n"
+            fini_snail
+            exit 1
+            fi
+        else
+            printf "\t\t\t@@@ - already copied: %s.\n" ${filename}
+    fi
     done
     if [ ! -z "$temp_interp" ] ; then
         remove_interp $temp_interp
